@@ -11,29 +11,38 @@ import uvicorn
 app = FastAPI()
 security = HTTPBasic()
 
-# Предустановленные учетные данные пользователей
 
+#Файл с заметками
 NOTES_FILE = 'notes.json'
+#Файл с пользователями
+USERS_FILE = 'users.json'
 
-users = {
-    "user1": "password1",
-    "user2": "password2"
-}
-
-
+#Для каждого соответственно по классу с валидацией на вводимый тип данных
 class Note(BaseModel):
     title: str
     content: str
 
+class User(BaseModel):
+    username: str
+    password: str
 
 # функция запроса в яндекс спелер для валидации
 async def check_correct(value):
     async with aiohttp.ClientSession() as session:
         async with session.get('https://speller.yandex.net/services/spellservice.json/checkText?',
-                               params={'text': value}) as response:
-            html = json.loads(await response.text())
+                               params={'text': value}) as response: #формируем запрос на сайт Яндекс
+            html = json.loads(await response.text()) #возвращает так же JSON файл с информацией включая предложенные исправления
             return html
-
+# Загружаем пользователей из файла
+def load_users():
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, 'r') as file:
+                return json.load(file)
+        except json.JSONDecodeError as e:
+            print(f"Ошибка при загрузке пользователей: {e}")
+            return {}
+    return {}
 
 # Загружаем заметки из файла
 def load_notes():
@@ -45,7 +54,13 @@ def load_notes():
             print(f"Ошибка при загрузке файла: {e}")
             return {}
     return {}
-
+#Сохраняем юзеров в файл
+def save_users(users):
+    try:
+        with open(USERS_FILE, 'w') as file:
+            json.dump(users, file)
+    except Exception as e:
+        print(f"Ошибка при сохранении пользователей: {e}")
 
 # Сохраняем заметки в файл
 def save_notes(notes):
@@ -56,8 +71,10 @@ def save_notes(notes):
         print(f"Ошибка при сохранении файла: {e}")
 
 
+
 # Аутентифицируем пользователя на основе предустановленных учетных данных
 def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
+    users = load_users()
     if credentials.username in users and users[credentials.username] == credentials.password:
         return credentials.username
     raise HTTPException(
@@ -66,6 +83,15 @@ def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
         headers={"WWW-Authenticate": "Basic"},
     )
 
+# Создание нового пользователя
+@app.post("/users")
+async def create_user(user: User):
+    users = load_users()
+    if user.username in users:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    users[user.username] = user.password
+    save_users(users)
+    return {"message": "User created successfully"}
 
 # Возвращаем список заметок для аутентифицированного пользователя
 @app.get("/notes", response_model=List[Note])

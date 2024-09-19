@@ -1,11 +1,22 @@
 # Test your FastAPI endpoints
 
-GET http://127.0.0.1:8000/
+DELETE http://127.0.0.1:8000/notes/0
+Authorization: Basic dXNlcjI6cGFzc3dvcmQy
 Accept: application/json
+
+{
+  "title": "Вдруг",
+  "content": "Друг"
+}
 
 ###
 
-GET http://127.0.0.1:8000/hello/User
+POST http://127.0.0.1:8000/users
 Accept: application/json
+
+{
+  "username": "user2",
+  "password": "password2"
+}
 
 ###
