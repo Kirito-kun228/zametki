@@ -29,7 +29,7 @@ Authorization: Basic dXNlcjpwYXNzd29yZA== #тут нужно ввести Base64
 ###
 
 #Запрос на удаление заметки
-DELETE http://127.0.0.1:8000/notes/1 #для идентификации заметки нужно написать ее номер (нумерация идет с 0)
+DELETE http://127.0.0.1:8000/notes/0 #для идентификации заметки нужно написать ее номер (нумерация идет с 0)
 Authorization: Basic dXNlcjpwYXNzd29yZA== #тут нужно ввести Base64 от вашего user:password
 
 ###

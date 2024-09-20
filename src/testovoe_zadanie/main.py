@@ -11,9 +11,9 @@ app = FastAPI()
 security = HTTPBasic()
 
 # Файл с заметками
-NOTES_FILE = 'notes.json'
+NOTES_FILE = '../data_files/notes.json'
 # Файл с пользователями
-USERS_FILE = 'users.json'
+USERS_FILE = '../data_files/users.json'
 
 
 # Для каждого соответственно по классу с валидацией на вводимый тип данных
