@@ -1,0 +1,49 @@
+# Test your FastAPI endpoints
+#Файл тестовых запросов показывающих функционал работы сервиса
+
+#Запрос на создание пользователя
+POST http://127.0.0.1:8000/users
+Accept: application/json
+
+{
+  "username": "user",
+  "password": "password"
+}
+
+###
+#Запрос на создание заметки
+POST http://127.0.0.1:8000/notes
+Authorization: Basic dXNlcjpwYXNzd29yZA== #тут нужно ввести Base64 от вашего user:password
+Accept: application/json
+
+{
+  "title": "Название заметки",
+  "content": "Текст заметки"
+}
+
+###
+#Запрос на получение заметки
+GET http://127.0.0.1:8000/notes
+Authorization: Basic dXNlcjpwYXNzd29yZA== #тут нужно ввести Base64 от вашего user:password
+
+###
+
+#Запрос на удаление заметки
+DELETE http://127.0.0.1:8000/notes/1 #для идентификации заметки нужно написать ее номер (нумерация идет с 0)
+Authorization: Basic dXNlcjpwYXNzd29yZA== #тут нужно ввести Base64 от вашего user:password
+
+###
+
+###
+#тест валидации орфографии
+POST http://127.0.0.1:8000/notes
+Authorization: Basic dXNlcjpwYXNzd29yZA== #тут нужно ввести Base64 от вашего user:password
+Accept: application/json
+
+{
+  "title": "Названее заметки",
+  "content": "Текст зометки"
+}
+
+###
+

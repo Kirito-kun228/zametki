@@ -37,12 +37,16 @@ async def check_correct(value):
 def load_users():
     if os.path.exists(USERS_FILE):
         try:
-            with open(USERS_FILE, 'r') as file:
-                return json.load(file)
+            with open(USERS_FILE, 'r', encoding='utf-8') as file:
+                content = file.read().strip()  # Читаем содержимое файла
+                if not content:  # Если файл пуст, возвращаем пустой словарь
+                    return {}
+                return json.loads(content)
         except json.JSONDecodeError as e:
             print(f"Ошибка при загрузке пользователей: {e}")
             return {}
     return {}
+
 
 # Загружаем заметки из файла
 def load_notes():
@@ -75,6 +79,7 @@ def save_notes(notes):
 # Аутентифицируем пользователя на основе предустановленных учетных данных
 def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
     users = load_users()
+    print(users)
     if credentials.username in users and users[credentials.username] == credentials.password:
         return credentials.username
     raise HTTPException(
@@ -100,7 +105,7 @@ async def get_notes(user: str = Depends(get_current_user)):
     user_notes = notes.get(user, [])
     return user_notes
 
-
+#Добавляем заметку в файл, если она пройдет проверку на орфографию
 @app.post("/notes")
 async def add_note(note: Note, user: str = Depends(get_current_user)):
     corrects_title = await check_correct(note.title)
