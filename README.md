@@ -5,4 +5,4 @@
 
  ссылка на докер-контейнер https://hub.docker.com/repository/docker/kiritokun1337/testovoe_zadanie/general
  для запуска используйте команды `docker pull kiritokun1337/testovoe_zadanie:latest`
- а после `docker run -d -p 8000:8000 kiritokun1337/testovoe_zadanie:latest`
+ а после `docker run -d -p 8000:8000 dockerhub_kiritokun1337/testovoe_zadanie:latest`
