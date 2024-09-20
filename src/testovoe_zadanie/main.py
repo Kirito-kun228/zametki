@@ -4,35 +4,42 @@ from typing import List
 from pydantic import BaseModel, field_validator
 import json
 import os
-import asyncio
 import aiohttp
 import uvicorn
 
 app = FastAPI()
 security = HTTPBasic()
 
-
-#Файл с заметками
+# Файл с заметками
 NOTES_FILE = 'notes.json'
-#Файл с пользователями
+# Файл с пользователями
 USERS_FILE = 'users.json'
 
-#Для каждого соответственно по классу с валидацией на вводимый тип данных
+
+# Для каждого соответственно по классу с валидацией на вводимый тип данных
 class Note(BaseModel):
     title: str
     content: str
+
 
 class User(BaseModel):
     username: str
     password: str
 
+
 # функция запроса в яндекс спелер для валидации
 async def check_correct(value):
     async with aiohttp.ClientSession() as session:
-        async with session.get('https://speller.yandex.net/services/spellservice.json/checkText?',
-                               params={'text': value}) as response: #формируем запрос на сайт Яндекс
-            html = json.loads(await response.text()) #возвращает так же JSON файл с информацией включая предложенные исправления
+        async with session.get(
+                'https://speller.yandex.net/services/spellservice.json/checkText?',
+                params={'text':
+                        value}) as response:  # формируем запрос на сайт Яндекс
+            html = json.loads(
+                await response.text()
+            )  # возвращает так же JSON файл с информацией включая предложенные исправления
             return html
+
+
 # Загружаем пользователей из файла
 def load_users():
     if os.path.exists(USERS_FILE):
@@ -58,13 +65,16 @@ def load_notes():
             print(f"Ошибка при загрузке файла: {e}")
             return {}
     return {}
-#Сохраняем юзеров в файл
+
+
+# Сохраняем юзеров в файл
 def save_users(users):
     try:
         with open(USERS_FILE, 'w') as file:
             json.dump(users, file)
     except Exception as e:
         print(f"Ошибка при сохранении пользователей: {e}")
+
 
 # Сохраняем заметки в файл
 def save_notes(notes):
@@ -75,18 +85,19 @@ def save_notes(notes):
         print(f"Ошибка при сохранении файла: {e}")
 
 
-
 # Аутентифицируем пользователя на основе предустановленных учетных данных
 def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
     users = load_users()
     print(users)
-    if credentials.username in users and users[credentials.username] == credentials.password:
+    if credentials.username in users and users[
+            credentials.username] == credentials.password:
         return credentials.username
     raise HTTPException(
         status_code=401,
         detail="Invalid credentials",
         headers={"WWW-Authenticate": "Basic"},
     )
+
 
 # Создание нового пользователя
 @app.post("/users")
@@ -98,6 +109,7 @@ async def create_user(user: User):
     save_users(users)
     return {"message": "User created successfully"}
 
+
 # Возвращаем список заметок для аутентифицированного пользователя
 @app.get("/notes", response_model=List[Note])
 async def get_notes(user: str = Depends(get_current_user)):
@@ -105,20 +117,29 @@ async def get_notes(user: str = Depends(get_current_user)):
     user_notes = notes.get(user, [])
     return user_notes
 
-#Добавляем заметку в файл, если она пройдет проверку на орфографию
+
+# Добавляем заметку в файл, если она пройдет проверку на орфографию
 @app.post("/notes")
 async def add_note(note: Note, user: str = Depends(get_current_user)):
     corrects_title = await check_correct(note.title)
     corrects_content = await check_correct(note.content)
     notes = load_notes()
     if corrects_title and corrects_title[0].get('s'):
-        suggestion = corrects_title[0]['s'][0]  # Берем первую исправленную версию
-        raise HTTPException(status_code=400,
-                            detail=f'В заголовке ошибка! Возможно вы имели ввиду "{suggestion}"? исправьте и повторите попытку')
+        suggestion = corrects_title[0]['s'][
+            0]  # Берем первую исправленную версию
+        raise HTTPException(
+            status_code=400,
+            detail=
+            f'В заголовке ошибка! Возможно вы имели ввиду "{suggestion}"? исправьте и повторите попытку'
+        )
     if corrects_content and corrects_content[0].get('s'):
-        suggestion = corrects_content[0]['s'][0]  # Берем первую исправленную версию
-        raise HTTPException(status_code=400,
-                            detail=f'В тексте заметки ошибка! Возможно вы имели ввиду "{suggestion}"? исправьте и повторите попытку')
+        suggestion = corrects_content[0]['s'][
+            0]  # Берем первую исправленную версию
+        raise HTTPException(
+            status_code=400,
+            detail=
+            f'В тексте заметки ошибка! Возможно вы имели ввиду "{suggestion}"? исправьте и повторите попытку'
+        )
     if user not in notes:
         notes[user] = []
     notes[user].append(note.dict())
